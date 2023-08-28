@@ -1797,11 +1797,19 @@ moveselectedclientstomon(const Arg *arg)
     }
   }
 
+  unsigned int mtags = m->tagset[m->seltags];
+  unsigned int selmontags = selmon->tagset[selmon->seltags];
 	m->seltags ^= 1;
-  m->tagset[m->seltags] = selmon->tagset[selmon->seltags] & TAGMASK;
-  selmon = m;
+  selmon->seltags ^= 1;
+
+  selmon->tagset[selmon->seltags] = mtags;
+  m->tagset[m->seltags] = selmontags;
+
 	focus(NULL);
 	arrange(selmon);
+  selmon = m;
+  focus(NULL);
+  arrange(selmon);
 }
 
 void
