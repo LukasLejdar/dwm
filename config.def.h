@@ -82,6 +82,8 @@ static const Layout layouts[] = {
 
 /* helper for spawning shell commands in the pre dwm-5.0 fashion */
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
+#define BRIGHTNESSCMD(i) { .v = (const char*[]){"/home/lukas/bin/brightness", "-i", i, NULL } }
+#define BRIGHTNESSMONCMD(i, d) { .v = (const char*[]){"/home/lukas/bin/brightness", "-i", i, "-D", d, NULL } }
 
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
@@ -94,10 +96,6 @@ static const char *nautiluscmd[]  = { "nautilus", NULL };
 static const char *upvol[] = { "/usr/bin/pactl", "set-sink-volume", "3", "+5%", NULL };
 static const char *downvol[] = { "/usr/bin/pactl", "set-sink-volume", "3", "-5%", NULL };
 static const char *mutevol[] = { "/usr/bin/pactl", "set-sink-mute", "3", "toggle", NULL };
- 
-/* backlight */
-static const char *brightnessup[] = { "sudo", "xbacklight", "-inc", "5", NULL };
-static const char *brightnessdown[] = { "sudo", "xbacklight", "-dec", "5", NULL };
 
 static const Key keys[] = {
 	/* modifier                     key        function        argument */
@@ -146,11 +144,24 @@ static const Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_comma,  tagmon,         {.i = -1 } },
 	{ MODKEY|ShiftMask,             XK_period, tagmon,         {.i = +1 } },
 	{ MODKEY,                       XK_e,      moveselectedclientstomon, {.i = +1 } },
-  { 0,                            XF86XK_AudioLowerVolume,  spawn,      {.v = downvol} },
-  { 0,                            XF86XK_AudioMute,         spawn,      {.v = mutevol }},
-  { 0,                            XF86XK_AudioRaiseVolume,  spawn,      {.v = upvol} },
-  { 0,                            XF86XK_MonBrightnessUp,   spawn,      {.v = brightnessup} },
-  { 0,                            XF86XK_MonBrightnessDown, spawn,      {.v = brightnessdown} },
+  { 0, XF86XK_AudioLowerVolume,  spawn, { .v = downvol } },
+  { 0, XF86XK_AudioMute,         spawn, { .v = mutevol } },
+  { 0, XF86XK_AudioRaiseVolume,  spawn, { .v = upvol } },
+  { 0, XF86XK_MonBrightnessUp,   spawn, BRIGHTNESSCMD("0.1") },
+  { 0, XF86XK_MonBrightnessDown, spawn, BRIGHTNESSCMD("-0.1") },
+  { MODKEY, XF86XK_MonBrightnessUp,   spawn, BRIGHTNESSMONCMD("0.1", "0") },
+  { MODKEY, XF86XK_MonBrightnessDown, spawn, BRIGHTNESSMONCMD("-0.1", "0") },
+  { MODKEY, XK_F6,   spawn, BRIGHTNESSMONCMD("0.1", "0") },
+  { MODKEY, XK_F5, spawn, BRIGHTNESSMONCMD("-0.1", "0") },
+  { ControlMask, XF86XK_MonBrightnessUp,   spawn, BRIGHTNESSMONCMD("0.1", "1") },
+  { ControlMask, XF86XK_MonBrightnessDown, spawn, BRIGHTNESSMONCMD("-0.1", "1") },
+  { ControlMask, XK_F6,   spawn, BRIGHTNESSMONCMD("0.1", "1") },
+  { ControlMask, XK_F5, spawn, BRIGHTNESSMONCMD("-0.1", "1") },
+  { ShiftMask, XF86XK_MonBrightnessUp,   spawn, BRIGHTNESSMONCMD("0.1", "2") },
+  { ShiftMask, XF86XK_MonBrightnessDown, spawn, BRIGHTNESSMONCMD("-0.1", "2") },
+  { ShiftMask, XK_F6,   spawn, BRIGHTNESSMONCMD("0.1", "2") },
+  { ShiftMask, XK_F5, spawn, BRIGHTNESSMONCMD("-0.1", "2") },
+
 	TAGKEYS(                        XK_1,                      0)
 	TAGKEYS(                        XK_2,                      1)
 	TAGKEYS(                        XK_3,                      2)
