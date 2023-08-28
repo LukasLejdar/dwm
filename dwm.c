@@ -44,6 +44,8 @@
 #include "drw.h"
 #include "util.h"
 
+#include <stdbool.h>
+
 /* macros */
 #define BUTTONMASK              (ButtonPressMask|ButtonReleaseMask)
 #define CLEANMASK(mask)         (mask & ~(numlockmask|LockMask) & (ShiftMask|ControlMask|Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
@@ -213,6 +215,7 @@ static void seturgent(Client *c, int urg);
 static void showhide(Client *c);
 static void spawn(const Arg *arg);
 static void tag(const Arg *arg);
+static void tagoccupied(const Arg *arg);
 static void tagmon(const Arg *arg);
 static void togglebar(const Arg *arg);
 static void togglefloating(const Arg *arg);
@@ -232,6 +235,8 @@ static void updatetitle(Client *c);
 static void updatewindowtype(Client *c);
 static void updatewmhints(Client *c);
 static void view(const Arg *arg);
+static void viewoccupied(const Arg *arg);
+static void moveselectedclientstomon(const Arg *arg);
 static Client *wintoclient(Window w);
 static Monitor *wintomon(Window w);
 static int xerror(Display *dpy, XErrorEvent *ee);
@@ -1694,6 +1699,18 @@ spawn(const Arg *arg)
 	}
 }
 
+bool
+areThereClientsOnTag(int ui, Monitor *m) 
+{
+  Client *c;
+  for (c = m->clients; c; c = c->next) {
+    if (ui & c->tags & TAGMASK) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
 void
 tag(const Arg *arg)
 {
@@ -1705,11 +1722,78 @@ tag(const Arg *arg)
 }
 
 void
+tagoccupied(const Arg *arg)
+{
+  if (areThereClientsOnTag(arg->ui, selmon)) {
+    tag(arg);
+    return;
+  }
+  Monitor *m;
+  
+  for (m = mons; m; m = m->next) {
+    if(m == selmon) continue;
+    if (areThereClientsOnTag(arg->ui, m)) {
+      Client *c = selmon->sel;
+      unfocus(c, 1);
+      detach(c);
+      detachstack(c);
+      c->mon = m;
+      c->tags = arg->ui & TAGMASK;
+      attach(c);
+      attachstack(c);
+      focus(NULL);
+      arrange(NULL);
+      return;
+    }
+  }
+
+  tag(arg);
+}
+
+void
 tagmon(const Arg *arg)
 {
 	if (!selmon->sel || !mons->next)
 		return;
 	sendmon(selmon->sel, dirtomon(arg->i));
+}
+
+void 
+viewonmonitor(const Arg *arg, Monitor *m) {
+    unfocus(selmon->sel, 0);
+    selmon = m;
+    view(arg);
+    return;
+}
+
+
+void
+moveselectedclientstomon(const Arg *arg)
+{
+  if (!(mons->next)) return;
+  
+  Client *c;
+  Client *cl;
+  Monitor *m = dirtomon(arg->i);
+  for (cl = selmon->clients; cl;) {
+    c = cl;
+    cl = cl->next;
+
+    if (c->tags & selmon->tagset[selmon->seltags] & TAGMASK) {
+      unfocus(c, 1);
+      detach(c);
+      detachstack(c);
+      c->mon = m;
+      attach(c);
+      attachstack(c);
+    }
+  }
+
+	m->seltags ^= 1;
+  m->tagset[m->seltags] = selmon->tagset[selmon->seltags] & TAGMASK;
+  selmon = m;
+	focus(NULL);
+	arrange(selmon);
 }
 
 void
@@ -1921,7 +2005,7 @@ updategeom(void)
 			if (m == selmon)
 				selmon = mons;
 			cleanupmon(m);
-		}
+    }
 		free(unique);
 	} else
 #endif /* XINERAMA */
@@ -2060,6 +2144,25 @@ view(const Arg *arg)
 		selmon->tagset[selmon->seltags] = arg->ui & TAGMASK;
 	focus(NULL);
 	arrange(selmon);
+}
+
+void
+viewoccupied(const Arg *arg)
+{
+  if (areThereClientsOnTag(arg->ui, selmon)) {
+    view(arg);
+    return;
+  }
+
+  Monitor *m;
+  for (m = selmon->next; m; m = m->next) {
+    if (areThereClientsOnTag(arg->ui, m)) viewonmonitor(arg, m);
+  }
+  for (m = mons; m->next == selmon; m = m->next) {
+    if (areThereClientsOnTag(arg->ui, m)) viewonmonitor(arg, m);
+  }
+
+  view(arg);
 }
 
 Client *
