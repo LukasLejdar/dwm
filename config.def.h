@@ -1,4 +1,5 @@
 /* See LICENSE file for copyright and license details. */
+#include <X11/XF86keysym.h>
 
 /* appearance */
 static const unsigned int borderpx  = 1;        /* border pixel of windows */
@@ -89,6 +90,15 @@ static const char *termcmd[]  = { "/usr/local/bin/alacritty", NULL };
 static const char *chromecmd[]  = { "google-chrome", NULL };
 static const char *nautiluscmd[]  = { "nautilus", NULL };
 
+/* volume keys*/
+static const char *upvol[] = { "/usr/bin/pactl", "set-sink-volume", "3", "+5%", NULL };
+static const char *downvol[] = { "/usr/bin/pactl", "set-sink-volume", "3", "-5%", NULL };
+static const char *mutevol[] = { "/usr/bin/pactl", "set-sink-mute", "3", "toggle", NULL };
+ 
+/* backlight */
+static const char *brightnessup[] = { "sudo", "xbacklight", "-inc", "5", NULL };
+static const char *brightnessdown[] = { "sudo", "xbacklight", "-dec", "5", NULL };
+
 static const Key keys[] = {
 	/* modifier                     key        function        argument */
 	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
@@ -135,6 +145,12 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_period, focusmon,       {.i = +1 } },
 	{ MODKEY|ShiftMask,             XK_comma,  tagmon,         {.i = -1 } },
 	{ MODKEY|ShiftMask,             XK_period, tagmon,         {.i = +1 } },
+	{ MODKEY,                       XK_e,      moveselectedclientstomon, {.i = +1 } },
+  { 0,                            XF86XK_AudioLowerVolume,  spawn,      {.v = downvol} },
+  { 0,                            XF86XK_AudioMute,         spawn,      {.v = mutevol }},
+  { 0,                            XF86XK_AudioRaiseVolume,  spawn,      {.v = upvol} },
+  { 0,                            XF86XK_MonBrightnessUp,   spawn,      {.v = brightnessup} },
+  { 0,                            XF86XK_MonBrightnessDown, spawn,      {.v = brightnessdown} },
 	TAGKEYS(                        XK_1,                      0)
 	TAGKEYS(                        XK_2,                      1)
 	TAGKEYS(                        XK_3,                      2)
@@ -144,7 +160,6 @@ static const Key keys[] = {
 	TAGKEYS(                        XK_7,                      6)
 	TAGKEYS(                        XK_8,                      7)
 	TAGKEYS(                        XK_9,                      8)
-	{ MODKEY,                       XK_e,      moveselectedclientstomon, {.i = +1 } },
 	{ MODKEY|ShiftMask,             XK_q,      quit,           {0} },
 };
 
