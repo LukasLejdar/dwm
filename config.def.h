@@ -92,6 +92,7 @@ static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont,
 static const char *termcmd[]  = { "/usr/local/bin/alacritty", NULL };
 static const char *chromecmd[]  = { "google-chrome", NULL };
 static const char *nautiluscmd[]  = { "nautilus", NULL };
+static const char *bluelightcmd[]  = {"/home/lukas/bin/brightness", "-r", NULL };
 
 /* volume keys*/
 static const char *upvol[] = { "/usr/bin/pactl", "set-sink-volume", "3", "+5%", NULL };
@@ -148,6 +149,7 @@ static const Key keys[] = {
   { 0, XF86XK_AudioLowerVolume,  spawn, { .v = downvol } },
   { 0, XF86XK_AudioMute,         spawn, { .v = mutevol } },
   { 0, XF86XK_AudioRaiseVolume,  spawn, { .v = upvol } },
+  { 0, XF86XK_Display,           spawn, { .v = bluelightcmd } },
   { 0, XF86XK_MonBrightnessUp,   spawn, BRIGHTNESSCMD("0.1") },
   { 0, XF86XK_MonBrightnessDown, spawn, BRIGHTNESSCMD("-0.1") },
   { MODKEY, XF86XK_MonBrightnessUp,   spawn, BRIGHTNESSMONCMD("0.1", "0") },
