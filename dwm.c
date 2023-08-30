@@ -62,7 +62,7 @@
 
 /* enums */
 enum { CurNormal, CurResize, CurMove, CurLast }; /* cursor */
-enum { SchemeNorm, SchemeSel }; /* color schemes */
+enum { SchemeNorm, SchemeSel, SchemeOneWindow, SchemeWithATag, SchemeStatusBar, SchemeWithATagSel }; /* color schemes */
 enum { NetSupported, NetWMName, NetWMState, NetWMCheck,
        NetWMFullscreen, NetActiveWindow, NetWMWindowType,
        NetWMWindowTypeDialog, NetClientList, NetLast }; /* EWMH atoms */
@@ -731,9 +731,9 @@ drawbar(Monitor *m)
 
 	/* draw status first so it can be overdrawn by tags later */
 	if (m == selmon) { /* status is only drawn on selected monitor */
-		//drw_setscheme(drw, scheme[SchemeNorm]);
-		//tw = TEXTW(stext) - lrpad + 2; /* 2px right padding */
-		//drw_text(drw, m->ww - tw, 0, tw, bh, 0, stext, 0);
+		drw_setscheme(drw, scheme[SchemeStatusBar]);
+		tw = TEXTW(stext) - lrpad + 2; /* 2px right padding */
+		drw_text(drw, m->ww - tw, 0, tw, bh, 0, stext, 0);
 	}
 
 	for (c = m->clients; c; c = c->next) {
@@ -744,22 +744,21 @@ drawbar(Monitor *m)
 	x = 0;
 	for (i = 0; i < LENGTH(tags); i++) {
 		w = TEXTW(tags[i]);
-		drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeSel : SchemeNorm]);
-		drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], urg & 1 << i);
-		if (occ & 1 << i)
-			drw_rect(drw, x + boxs, boxs, boxw, boxw,
-				m == selmon && selmon->sel && selmon->sel->tags & 1 << i,
-				urg & 1 << i);
-		x += w;
-	}
+    for (i = 0; i < LENGTH(tags); i++) {
+      w = TEXTW(tags[i]);
+      drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? (m == selmon ? SchemeWithATagSel : SchemeSel) : occ & 1 << i ? SchemeWithATag : SchemeNorm]);
+      drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], urg & 1 << i);
+      x += w;
+    }
+  }
 	w = TEXTW(m->ltsymbol);
-	drw_setscheme(drw, scheme[SchemeNorm]);
+	drw_setscheme(drw, scheme[SchemeStatusBar]);
 	x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
 
 	if ((w = m->ww - tw - x) > bh) {
 		if (m->sel) {
-			drw_setscheme(drw, scheme[SchemeNorm]);
-			drw_text(drw, x, 0, w, bh, lrpad / 2, m->sel->name, 0);
+      drw_setscheme(drw, scheme[SchemeNorm]);
+			drw_text(drw, x, 0, w, bh, lrpad / 2, "" , 0);
 			if (m->sel->isfloating)
 				drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
 		} else {
@@ -808,6 +807,20 @@ expose(XEvent *e)
 		drawbar(m);
 }
 
+bool
+aremultipleclientsdisplayed(Monitor *m) {
+  if(!(m->clients)) return false;
+  if(!(m->clients->next)) return false;
+
+  Client *c;
+  unsigned int count = 0;
+	for (c = m->clients; c; c = c->next) {
+    if (c->tags & m->tagset[m->seltags] & TAGMASK) count += 1;
+    if (count > 1) return true;
+  }
+  return false;
+}
+
 void
 focus(Client *c)
 {
@@ -823,7 +836,12 @@ focus(Client *c)
 		detachstack(c);
 		attachstack(c);
 		grabbuttons(c, 1);
-		XSetWindowBorder(dpy, c->win, scheme[SchemeSel][ColBorder].pixel);
+
+    if (aremultipleclientsdisplayed(c->mon)) {
+      XSetWindowBorder(dpy, c->win, scheme[SchemeSel][ColBorder].pixel);
+    } else {
+      XSetWindowBorder(dpy, c->win, scheme[SchemeOneWindow][ColBorder].pixel);
+    }
 		setfocus(c);
 	} else {
 		XSetInputFocus(dpy, root, RevertToPointerRoot, CurrentTime);
@@ -1083,11 +1101,11 @@ manage(Window w, XWindowAttributes *wa)
 		c->y = c->mon->wy + c->mon->wh - HEIGHT(c);
 	c->x = MAX(c->x, c->mon->wx);
 	c->y = MAX(c->y, c->mon->wy);
-	c->bw = borderpx;
+  c->bw = borderpx;
 
 	wc.border_width = c->bw;
 	XConfigureWindow(dpy, w, CWBorderWidth, &wc);
-	XSetWindowBorder(dpy, w, scheme[SchemeNorm][ColBorder].pixel);
+  XSetWindowBorder(dpy, c->win, scheme[SchemeNorm][ColBorder].pixel);
 	configure(c); /* propagates border_width, if size doesn't change */
 	updatewindowtype(c);
 	updatesizehints(c);
@@ -1785,7 +1803,11 @@ unfocus(Client *c, int setfocus)
 	if (!c)
 		return;
 	grabbuttons(c, 0);
-	XSetWindowBorder(dpy, c->win, scheme[SchemeNorm][ColBorder].pixel);
+  if (aremultipleclientsdisplayed(c->mon)) {
+    XSetWindowBorder(dpy, c->win, scheme[SchemeNorm][ColBorder].pixel);
+  } else {
+    XSetWindowBorder(dpy, c->win, scheme[SchemeOneWindow][ColBorder].pixel);
+  }
 	if (setfocus) {
 		XSetInputFocus(dpy, root, RevertToPointerRoot, CurrentTime);
 		XDeleteProperty(dpy, root, netatom[NetActiveWindow]);

@@ -14,22 +14,35 @@ static const int topbar             = 1;        /* 0 means bottom bar */
 static const char *fonts[]          = { "JetBrainsMonoNerdFont:size=10" };
 static const char dmenufont[]       = "JetBrainsMonoNerdFont:size=10";
 static const char col_gray1[]       = "#222222";
-static const char col_gray2[]       = "#444444";
-static const char col_gray3[]       = "#bbbbbb";
-static const char col_gray4[]       = "#eeeeee";
+static const char col_gray2[]       = "#777777";
+static const char col_gray3[]       = "#888888";
+static const char col_gray4[]       = "#999999";
+static const char col_white[]       = "#ffffff";
 static const char col_cyan[]        = "#005577";
 static const char col_shiny[]        = "#a1c5d4";
-static const unsigned int baralpha = OPAQUE;
-static const unsigned int borderalpha = OPAQUE;
+static const char col_bar[]        = "#376578";
+static const char col_black[]        = "#1e222a";
+static const char col_pink[]        = "#FFC0CB";
+static const char col_chadwm[]        = "#3B4346";
+static const char col_blue[]        = "#61afef";
+//static const char col_chadwm[]        = "#2b4049";
 static const char *colors[][3]      = {
 	/*               fg         bg         border   */
-	[SchemeNorm] = { col_gray3, col_gray1, col_gray2 },
-	[SchemeSel]  = { col_gray4, col_cyan,  col_shiny},
+	[SchemeNorm] = { col_gray3, col_gray1,  col_gray2},
+	[SchemeSel]  = { col_gray3, col_bar,  col_shiny},
+	[SchemeOneWindow]  = { col_gray3, col_gray1,  col_gray1},
+	[SchemeWithATag]  = { col_white, col_gray1,  col_gray1},
+	[SchemeWithATagSel]  = { col_white, col_bar,  col_shiny},
+	[SchemeStatusBar]  = { col_gray3, col_gray1,  col_gray1},
 };
 static const unsigned int alphas[][3]      = {
     /*               fg      bg        border*/
-  [SchemeNorm] = { OPAQUE, baralpha, OPAQUE },
-	[SchemeSel]  = { OPAQUE, baralpha, OPAQUE },
+  [SchemeNorm] = { OPAQUE, OPAQUE, OPAQUE },
+	[SchemeSel]  = { OPAQUE, OPAQUE, OPAQUE },
+	[SchemeOneWindow]  =  { OPAQUE, OPAQUE, OPAQUE  },
+  [SchemeWithATag] = { OPAQUE, OPAQUE, OPAQUE },
+  [SchemeWithATagSel] = { OPAQUE, OPAQUE, OPAQUE },
+  [SchemeStatusBar] = { OPAQUE, OPAQUE, OPAQUE },
 };
 
 /* tagging */
@@ -95,8 +108,8 @@ static const char *nautiluscmd[]  = { "nautilus", NULL };
 static const char *bluelightcmd[]  = {"/home/lukas/bin/brightness", "-r", NULL };
 
 /* volume keys*/
-static const char *upvol[] = { "/usr/bin/pactl", "set-sink-volume", "3", "+5%", NULL };
-static const char *downvol[] = { "/usr/bin/pactl", "set-sink-volume", "3", "-5%", NULL };
+static const char *upvol[] = { "/home/lukas/bin/volume", "-i", "3%+", NULL };
+static const char *downvol[] = { "/home/lukas/bin/volume", "-i", "3%-", NULL };
 static const char *mutevol[] = { "/usr/bin/pactl", "set-sink-mute", "3", "toggle", NULL };
 
 static const Key keys[] = {
@@ -115,13 +128,13 @@ static const Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_h,      setcfact,       {.f = +0.25} },
 	{ MODKEY|ShiftMask,             XK_l,      setcfact,       {.f = -0.25} },
 	{ MODKEY|ShiftMask,             XK_o,      setcfact,       {.f =  0.00} },
-	{ MODKEY,                       XK_s, zoom,           {0} },
+	{ MODKEY,                       XK_s,      zoom,           {0} },
 	{ MODKEY|Mod1Mask,              XK_u,      incrgaps,       {.i = +1 } },
 	{ MODKEY|Mod1Mask|ShiftMask,    XK_u,      incrgaps,       {.i = -1 } },
 	{ MODKEY|Mod1Mask,              XK_i,      incrigaps,      {.i = +1 } },
 	{ MODKEY|Mod1Mask|ShiftMask,    XK_i,      incrigaps,      {.i = -1 } },
 	{ MODKEY|Mod1Mask,              XK_o,      incrogaps,      {.i = +1 } },
-	{ MODKEY|Mod1Mask|ShiftMask,    XK_o,      incrogaps,      {.i = -1 } },
+	{ MODKEY|Mod1Mask|ShiftMask,    XK_o,      incrogaps,      {.i = 0 } },
 	{ MODKEY|Mod1Mask,              XK_6,      incrihgaps,     {.i = +1 } },
 	{ MODKEY|Mod1Mask|ShiftMask,    XK_6,      incrihgaps,     {.i = -1 } },
 	{ MODKEY|Mod1Mask,              XK_7,      incrivgaps,     {.i = +1 } },
@@ -137,6 +150,8 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_t,      setlayout,      {.v = &layouts[0]} },
 	{ MODKEY,                       XK_f,      setlayout,      {.v = &layouts[1]} },
 	{ MODKEY,                       XK_m,      setlayout,      {.v = &layouts[2]} },
+	{ MODKEY,                       XK_h,      setlayout,      {.v = &layouts[7]} },
+  { MODKEY,                       XK_b,      setlayout,      {.v = &layouts[11]} },
 	{ MODKEY,                       XK_space,  setlayout,      {0} },
 	{ MODKEY|ShiftMask,             XK_space,  togglefloating, {0} },
 	{ MODKEY,                       XK_0,      view,           {.ui = ~0 } },
