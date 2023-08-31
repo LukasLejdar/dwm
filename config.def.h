@@ -16,8 +16,8 @@ static const char dmenufont[]       = "JetBrainsMonoNerdFont:size=10";
 static const char col_gray1[]       = "#222222";
 static const char col_gray2[]       = "#777777";
 static const char col_gray3[]       = "#888888";
-static const char col_gray4[]       = "#999999";
-static const char col_white[]       = "#ffffff";
+static const char col_gray4[]       = "#aaaaaa";
+static const char col_white[]       = "#eeeeee";
 static const char col_cyan[]        = "#005577";
 static const char col_shiny[]        = "#a1c5d4";
 static const char col_bar[]        = "#376578";
@@ -29,11 +29,11 @@ static const char col_blue[]        = "#61afef";
 static const char *colors[][3]      = {
 	/*               fg         bg         border   */
 	[SchemeNorm] = { col_gray3, col_gray1,  col_gray2},
-	[SchemeSel]  = { col_gray3, col_bar,  col_shiny},
+	[SchemeSel]  = { col_gray4, col_bar,  col_shiny},
 	[SchemeOneWindow]  = { col_gray3, col_gray1,  col_gray1},
 	[SchemeWithATag]  = { col_white, col_gray1,  col_gray1},
 	[SchemeWithATagSel]  = { col_white, col_bar,  col_shiny},
-	[SchemeStatusBar]  = { col_gray3, col_gray1,  col_gray1},
+	[SchemeStatusBar]  = { col_gray4, col_gray1,  col_gray1},
 };
 static const unsigned int alphas[][3]      = {
     /*               fg      bg        border*/
@@ -152,7 +152,7 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_m,      setlayout,      {.v = &layouts[2]} },
 	{ MODKEY,                       XK_h,      setlayout,      {.v = &layouts[7]} },
   { MODKEY,                       XK_b,      setlayout,      {.v = &layouts[11]} },
-	{ MODKEY,                       XK_space,  setlayout,      {0} },
+	{ MODKEY|ControlMask,                       XK_space,  setlayout,      {0} },
 	{ MODKEY|ShiftMask,             XK_space,  togglefloating, {0} },
 	{ MODKEY,                       XK_0,      view,           {.ui = ~0 } },
 	{ MODKEY|ShiftMask,             XK_0,      tag,            {.ui = ~0 } },

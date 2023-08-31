@@ -730,7 +730,7 @@ drawbar(Monitor *m)
 		return;
 
 	/* draw status first so it can be overdrawn by tags later */
-	if (m == selmon) { /* status is only drawn on selected monitor */
+	if (m == mons) { /* status is only drawn on selected monitor */
 		drw_setscheme(drw, scheme[SchemeStatusBar]);
 		tw = TEXTW(stext) - lrpad + 2; /* 2px right padding */
 		drw_text(drw, m->ww - tw, 0, tw, bh, 0, stext, 0);
@@ -747,12 +747,12 @@ drawbar(Monitor *m)
     for (i = 0; i < LENGTH(tags); i++) {
       w = TEXTW(tags[i]);
       drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? (m == selmon ? SchemeWithATagSel : SchemeSel) : occ & 1 << i ? SchemeWithATag : SchemeNorm]);
-      drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], urg & 1 << i);
+      drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], 0); // bh+1 to compensate SchemeOneWindow
       x += w;
     }
   }
 	w = TEXTW(m->ltsymbol);
-	drw_setscheme(drw, scheme[SchemeStatusBar]);
+	drw_setscheme(drw, scheme[SchemeNorm]);
 	x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
 
 	if ((w = m->ww - tw - x) > bh) {
@@ -2274,6 +2274,7 @@ viewonmonitor(const Arg *arg, Monitor *m) {
   unfocus(selmon->sel, 0);
   selmon = m;
   _view(arg);
+	warp(selmon->sel);
 }
 
 void 
@@ -2306,7 +2307,6 @@ viewoccupied(const Arg *arg)
     if (areclientsontag(arg->ui, m)) { viewonmonitor(arg, m); return; } }
 
   view(arg);
-	warp(selmon->sel);
 }
 
 void
