@@ -718,7 +718,7 @@ dirtomon(int dir)
 }
 
 void
-drawbar(Monitor *m)
+_drawbar(Monitor *m)
 {
 	int x, w, tw = 0;
 	int boxs = drw->fonts->h / 9;
@@ -726,14 +726,13 @@ drawbar(Monitor *m)
 	unsigned int i, occ = 0, urg = 0;
 	Client *c;
 
-	if (!m->showbar)
-		return;
+	if (!m->showbar) return;
 
 	/* draw status first so it can be overdrawn by tags later */
-	if (m == mons) { /* status is only drawn on selected monitor */
-		drw_setscheme(drw, scheme[SchemeStatusBar]);
-		tw = TEXTW(stext) - lrpad + 2; /* 2px right padding */
-		drw_text(drw, m->ww - tw, 0, tw, bh, 0, stext, 0);
+	if (m == mons) {
+    drw_setscheme(drw, scheme[SchemeStatusBar]);
+    tw = TEXTW(stext) - lrpad + 2; /* 2px right padding */
+    drw_text(drw, m->ww - tw, 0, tw, bh, 0, stext, 0);
 	}
 
 	for (c = m->clients; c; c = c->next) {
@@ -769,13 +768,26 @@ drawbar(Monitor *m)
 	drw_map(drw, m->barwin, 0, 0, m->ww, bh);
 }
 
+void 
+drawbar(Monitor *m) 
+{
+  if(m != mons) {
+    drw_setscheme(drw, scheme[SchemeStatusBar]);
+    int _tw = TEXTW(stext) - lrpad + 2;
+    drw_text(drw, mons->ww - _tw, 0, _tw, bh, 0, stext, 0);
+    drw_map(drw, mons->barwin, 0, 0, mons->ww, bh);
+  }
+
+  _drawbar(m);
+}
+
 void
 drawbars(void)
 {
 	Monitor *m;
 
 	for (m = mons; m; m = m->next)
-		drawbar(m);
+		_drawbar(m);
 }
 
 void

@@ -106,6 +106,7 @@ static const char *termcmd[]  = { "/usr/local/bin/alacritty", NULL };
 static const char *chromecmd[]  = { "google-chrome", NULL };
 static const char *nautiluscmd[]  = { "nautilus", NULL };
 static const char *bluelightcmd[]  = {"/home/lukas/bin/brightness", "-r", NULL };
+static const char *layoutcmd[]  = {"/bin/bash", "/home/lukas/bin/layout.sh", "-r", NULL };
 
 /* volume keys*/
 static const char *upvol[] = { "/home/lukas/bin/volume", "-i", "3%+", NULL };
@@ -114,11 +115,11 @@ static const char *mutevol[] = { "/usr/bin/pactl", "set-sink-mute", "3", "toggle
 
 static const Key keys[] = {
 	/* modifier                     key        function        argument */
-	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
+	{ MODKEY,                       XK_f,      spawn,          {.v = dmenucmd } },
 	{ MODKEY,                       XK_Return, spawn,          {.v = termcmd } },
 	{ MODKEY,                       XK_c,      spawn,          {.v = chromecmd } },
 	{ MODKEY,                       XK_n,      spawn,          {.v = nautiluscmd } },
-	{ MODKEY,                       XK_b,      togglebar,      {0} },
+	{ MODKEY|ShiftMask,             XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_a,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_d,      focusstack,     {.i = -1 } },
 	{ MODKEY,                       XK_j,      incnmaster,     {.i = +1 } },
@@ -147,12 +148,11 @@ static const Key keys[] = {
 	{ MODKEY|Mod1Mask|ShiftMask,    XK_0,      defaultgaps,    {0} },
 	{ MODKEY,                       XK_Tab,    view,           {0} },
 	{ MODKEY,                       XK_q,      killclient,     {0} },
-	{ MODKEY,                       XK_t,      setlayout,      {.v = &layouts[0]} },
-	{ MODKEY,                       XK_f,      setlayout,      {.v = &layouts[1]} },
-	{ MODKEY,                       XK_m,      setlayout,      {.v = &layouts[2]} },
-	{ MODKEY,                       XK_h,      setlayout,      {.v = &layouts[7]} },
-  { MODKEY,                       XK_b,      setlayout,      {.v = &layouts[11]} },
-	{ MODKEY|ControlMask,                       XK_space,  setlayout,      {0} },
+	{ MODKEY,                       XK_u,      setlayout,      {.v = &layouts[0]} },
+	{ MODKEY,                       XK_i,      setlayout,      {.v = &layouts[1]} },
+	{ MODKEY,                       XK_o,      setlayout,      {.v = &layouts[2]} },
+	{ MODKEY,                       XK_p,      setlayout,      {.v = &layouts[7]} },
+	{ MODKEY|ControlMask,           XK_space,  setlayout,      {0} },
 	{ MODKEY|ShiftMask,             XK_space,  togglefloating, {0} },
 	{ MODKEY,                       XK_0,      view,           {.ui = ~0 } },
 	{ MODKEY|ShiftMask,             XK_0,      tag,            {.ui = ~0 } },
@@ -161,6 +161,7 @@ static const Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_comma,  tagmon,         {.i = -1 } },
 	{ MODKEY|ShiftMask,             XK_period, tagmon,         {.i = +1 } },
 	{ MODKEY,                       XK_e,      moveselclientstomon, {.i = +1 } },
+	{ MODKEY,                       XK_space,  spawn, {.v = layoutcmd} },
   { 0, XF86XK_AudioLowerVolume,  spawn, { .v = downvol } },
   { 0, XF86XK_AudioMute,         spawn, { .v = mutevol } },
   { 0, XF86XK_AudioRaiseVolume,  spawn, { .v = upvol } },
