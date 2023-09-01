@@ -771,14 +771,8 @@ _drawbar(Monitor *m)
 void 
 drawbar(Monitor *m) 
 {
-  if(m != mons) {
-    drw_setscheme(drw, scheme[SchemeStatusBar]);
-    int _tw = TEXTW(stext) - lrpad + 2;
-    drw_text(drw, mons->ww - _tw, 0, _tw, bh, 0, stext, 0);
-    drw_map(drw, mons->barwin, 0, 0, mons->ww, bh);
-  }
-
   _drawbar(m);
+  if(m != mons) _drawbar(mons);
 }
 
 void
