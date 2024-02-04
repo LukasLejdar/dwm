@@ -216,7 +216,7 @@ static void seturgent(Client *c, int urg);
 static void showhide(Client *c);
 static void spawn(const Arg *arg);
 static void tag(const Arg *arg);
-static void tagoccupied(const Arg *arg);
+static void tagsmart(const Arg *arg);
 static void tagmon(const Arg *arg);
 static void togglebar(const Arg *arg);
 static void togglefloating(const Arg *arg);
@@ -237,7 +237,7 @@ static void updatewindowtype(Client *c);
 static void updatewmhints(Client *c);
 static void view(const Arg *arg);
 static void warp(const Client *c);
-static void viewoccupied(const Arg *arg);
+static void viewsmart(const Arg *arg);
 static void moveselclientstomon(const Arg *arg);
 static Client *wintoclient(Window w);
 static Monitor *wintomon(Window w);
@@ -2247,15 +2247,16 @@ zoom(const Arg *arg)
 }
 
 
-// ############ OCCUPIED ##############
+// ############ SMARTTAG ##############
 
 bool
 areclientsontag(unsigned int ui, Monitor *m) 
 {
   Client *c;
-  unsigned int occ = 0;
-	for (c = m->clients; c; c = c->next) occ |= c->tags;
-  return ui & occ & TAGMASK;
+	for (c = m->clients; c; c = c->next) {
+    if(ui & c->tags & TAGMASK) return true; 
+  }
+  return false;
 }
 
 void 
@@ -2298,7 +2299,7 @@ tagonmonitor(const Arg *arg, Client *c, Monitor *m)
 }
 
 void
-viewoccupied(const Arg *arg)
+viewsmart(const Arg *arg)
 {
 	if ((arg->ui & TAGMASK) == selmon->tagset[selmon->seltags]) return;
   if (!(mons->next) || areclientsontag(arg->ui, selmon)) {
@@ -2316,7 +2317,7 @@ viewoccupied(const Arg *arg)
 }
 
 void
-tagoccupied(const Arg *arg)
+tagsmart(const Arg *arg)
 {
   if (!(arg->ui & TAGMASK) || !selmon->sel) return;
   if (!mons->next || areclientsontag(arg->ui, selmon)) {
@@ -2372,7 +2373,7 @@ moveselclientstomon(const Arg *arg)
   pushtags(m);
 }
 
-// ############ OCCUPIED ##############
+// ############ SMARTTAG ##############
 
 int
 main(int argc, char *argv[])

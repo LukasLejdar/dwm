@@ -13,6 +13,7 @@ static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
 static const char *fonts[]          = { "JetBrainsMonoNerdFont:size=10" };
 static const char dmenufont[]       = "JetBrainsMonoNerdFont:size=10";
+
 static const char col_gray1[]       = "#222222";
 static const char col_gray2[]       = "#777777";
 static const char col_gray3[]       = "#888888";
@@ -89,29 +90,33 @@ static const Layout layouts[] = {
 /* key definitions */
 #define MODKEY Mod4Mask
 #define TAGKEYS(KEY,TAG) \
-	{ MODKEY,                       KEY,      viewoccupied,           {.ui = 1 << TAG} }, \
+	{ MODKEY,                       KEY,      viewsmart,           {.ui = 1 << TAG} }, \
 	{ MODKEY|ControlMask,           KEY,      toggleview,     {.ui = 1 << TAG} }, \
-	{ MODKEY|ShiftMask,             KEY,      tagoccupied,            {.ui = 1 << TAG} }, \
+	{ MODKEY|ShiftMask,             KEY,      tagsmart,            {.ui = 1 << TAG} }, \
 	{ MODKEY|ControlMask|ShiftMask, KEY,      toggletag,      {.ui = 1 << TAG} },
 
 /* helper for spawning shell commands in the pre dwm-5.0 fashion */
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
-#define BRIGHTNESSCMD(i) { .v = (const char*[]){"/home/lukas/bin/brightness", "-i", i, NULL } }
-#define BRIGHTNESSMONCMD(i, d) { .v = (const char*[]){"/home/lukas/bin/brightness", "-i", i, "-D", d, NULL } }
+#define BRIGHTNESSCMD(i) { .v = (const char*[]){"/home/lukas/bin/brightness.sh", "-i", i, NULL } }
+#define BRIGHTNESSMONCMD(i, d) { .v = (const char*[]){"/home/lukas/bin/brightness.sh", "-i", i, "-D", d, NULL } }
+#define SETSINKCMD(S) { .v = (const char*[]){"/home/lukas/bin/set-sink-port.sh", S, NULL } }
+#define LAYOUTCMD(l) { .v = (const char*[]){"/bin/bash", "/home/lukas/bin/layout.sh", l, NULL } }
 
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
-static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
+static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray4, "-sb", col_bar, "-sf", col_gray4, NULL };
 static const char *termcmd[]  = { "/usr/local/bin/alacritty", NULL };
 static const char *chromecmd[]  = { "google-chrome", NULL };
 static const char *nautiluscmd[]  = { "nautilus", NULL };
-static const char *bluelightcmd[]  = {"/home/lukas/bin/brightness", "-r", NULL };
-static const char *layoutcmd[]  = {"/bin/bash", "/home/lukas/bin/layout.sh", "-r", NULL };
+static const char *bluelightcmd[]  = {"/home/lukas/bin/brightness.sh", "-r", NULL };
 
 /* volume keys*/
-static const char *upvol[] = { "/home/lukas/bin/volume", "-i", "3%+", NULL };
-static const char *downvol[] = { "/home/lukas/bin/volume", "-i", "3%-", NULL };
-static const char *mutevol[] = { "/usr/bin/pactl", "set-sink-mute", "3", "toggle", NULL };
+static const char *upvol[] = { "/home/lukas/bin/volume.sh", "-i", "3%+", NULL };
+static const char *downvol[] = { "/home/lukas/bin/volume.sh", "-i", "3%-", NULL };
+static const char *mutevol[] = { "/home/lukas/bin/mute.sh", NULL };
+
+static const char *poweroffcmd[] = { "/usr/sbin/poweroff", NULL };
+static const char *restartcmd[] = { "/usr/sbin/reboot", NULL };
 
 static const Key keys[] = {
 	/* modifier                     key        function        argument */
@@ -120,8 +125,8 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_c,      spawn,          {.v = chromecmd } },
 	{ MODKEY,                       XK_n,      spawn,          {.v = nautiluscmd } },
 	{ MODKEY|ShiftMask,             XK_b,      togglebar,      {0} },
-	{ MODKEY,                       XK_a,      focusstack,     {.i = +1 } },
-	{ MODKEY,                       XK_d,      focusstack,     {.i = -1 } },
+  { MODKEY,                       XK_d,      focusstack,     {.i = +1 } },
+	{ MODKEY,                       XK_a,      focusstack,     {.i = -1 } },
 	{ MODKEY,                       XK_j,      incnmaster,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      incnmaster,     {.i = -1 } },
 	{ MODKEY,                       XK_h,      setmfact,       {.f = -0.05} },
@@ -161,10 +166,14 @@ static const Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_comma,  tagmon,         {.i = -1 } },
 	{ MODKEY|ShiftMask,             XK_period, tagmon,         {.i = +1 } },
 	{ MODKEY,                       XK_e,      moveselclientstomon, {.i = +1 } },
-	{ MODKEY,                       XK_space,  spawn, {.v = layoutcmd} },
+	{ MODKEY,                       XK_space,  spawn, LAYOUTCMD("")},
+	{ MODKEY,                       XK_bracketleft,  spawn, LAYOUTCMD("us") },
+	{ MODKEY,                       XK_bracketright,  spawn, LAYOUTCMD("cz") },
   { 0, XF86XK_AudioLowerVolume,  spawn, { .v = downvol } },
-  { 0, XF86XK_AudioMute,         spawn, { .v = mutevol } },
   { 0, XF86XK_AudioRaiseVolume,  spawn, { .v = upvol } },
+  { MODKEY, XK_F2,               spawn, SETSINKCMD("-S") },
+  { MODKEY, XK_F3,               spawn, SETSINKCMD("-H") },
+  { 0, XF86XK_AudioMute,         spawn, { .v = mutevol } },
   { 0, XF86XK_Display,           spawn, { .v = bluelightcmd } },
   { 0, XF86XK_MonBrightnessUp,   spawn, BRIGHTNESSCMD("0.1") },
   { 0, XF86XK_MonBrightnessDown, spawn, BRIGHTNESSCMD("-0.1") },
@@ -190,7 +199,9 @@ static const Key keys[] = {
 	TAGKEYS(                        XK_7,                      6)
 	TAGKEYS(                        XK_8,                      7)
 	TAGKEYS(                        XK_9,                      8)
-	{ MODKEY|ShiftMask,             XK_q,      quit,           {0} },
+	{ MODKEY|ShiftMask,             XK_p,      spawn,           { .v = poweroffcmd } },
+	{ MODKEY|ShiftMask,             XK_r,      spawn,           { .v = restartcmd } },
+  { MODKEY|ShiftMask,             XK_q,      quit,           {0} },
 };
 
 /* button definitions */
