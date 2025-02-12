@@ -144,6 +144,7 @@ typedef struct {
 	const char *class;
 	const char *instance;
 	const char *title;
+  const char *glyp;
 	unsigned int tags;
 	int isfloating;
 	int monitor;

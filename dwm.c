@@ -20,6 +20,7 @@
  *
  * To understand everything else, start reading main().
  */
+#include <X11/extensions/render.h>
 #include <errno.h>
 #include <locale.h>
 #include <signal.h>
@@ -97,6 +98,7 @@ struct Client {
 	int bw, oldbw;
 	unsigned int tags;
 	int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen;
+  bool hasglyph;
 	Client *next;
 	Client *snext;
 	Monitor *mon;
@@ -116,6 +118,7 @@ typedef struct {
 } Layout;
 
 struct Monitor {
+  const char* tagGlyphs[9];
 	char ltsymbol[16];
 	float mfact;
 	int nmaster;
@@ -148,6 +151,11 @@ typedef struct {
 	int isfloating;
 	int monitor;
 } Rule;
+
+typedef struct {
+  const char *keyword;
+  const unsigned int i;
+} ClassGlyph;
 
 /* function declarations */
 static void applyrules(Client *c);
@@ -305,19 +313,30 @@ applyrules(Client *c)
 	/* rule matching */
 	c->isfloating = 0;
 	c->tags = 0;
+
 	XGetClassHint(dpy, c->win, &ch);
 	class    = ch.res_class ? ch.res_class : broken;
 	instance = ch.res_name  ? ch.res_name  : broken;
 
+  fprintf(stderr, "apply rules for %s\n", c->name);
+
 	for (i = 0; i < LENGTH(rules); i++) {
 		r = &rules[i];
+
 		if ((!r->title || strstr(c->name, r->title))
 		&& (!r->class || strstr(class, r->class))
 		&& (!r->instance || strstr(instance, r->instance)))
 		{
+      fprintf(stderr, "rules match %s\n", c->name);
 			c->isfloating = r->isfloating;
 			c->tags |= r->tags;
-			for (m = mons; m && m->num != r->monitor; m = m->next);
+      c->hasglyph = true;
+
+			for (m = mons; m && m->num != r->monitor; m = m->next) {
+        fprintf(stderr, "comparing monitor %d for class %s %d\n", m->num, r->class, r->monitor);
+      }
+
+			c->isfloating = r->isfloating;
 			if (m)
 				c->mon = m;
 		}
@@ -665,6 +684,7 @@ createmon(void)
 	m->gappov = gappov;
 	m->lt[0] = &layouts[0];
 	m->lt[1] = &layouts[1 % LENGTH(layouts)];
+  memcpy(m->tagGlyphs, tags, sizeof(tags));
 	strncpy(m->ltsymbol, layouts[0].symbol, sizeof m->ltsymbol);
 	return m;
 }
@@ -725,6 +745,7 @@ _drawbar(Monitor *m)
 	int boxw = drw->fonts->h / 6 + 2;
 	unsigned int i, occ = 0, urg = 0;
 	Client *c;
+  const ClassGlyph *glyph;
 
 	if (!m->showbar) return;
 
@@ -735,21 +756,35 @@ _drawbar(Monitor *m)
     drw_text(drw, m->ww - tw, 0, tw, bh, 0, stext, 0);
 	}
 
+  memcpy(m->tagGlyphs, tags, sizeof(tags));
 	for (c = m->clients; c; c = c->next) {
 		occ |= c->tags;
 		if (c->isurgent)
 			urg |= c->tags;
+
+    fprintf(stderr, "client name %s\n", c->name);
+    if (!(c->hasglyph)) continue;
+    
+    for (int g = 0; g < LENGTH(classGlyphs); g++) {
+      glyph = &classGlyphs[g];
+
+      if (strstr(c->name, glyph->keyword)) {
+        for (int i = 0; i < LENGTH(c->mon->tagGlyphs); i++) {
+          if(c->tags & 1 << i) { 
+            c->mon->tagGlyphs[i] = glyphs[glyph->i]; 
+          }
+        }
+      }
+    }
 	}
 	x = 0;
-	for (i = 0; i < LENGTH(tags); i++) {
-		w = TEXTW(tags[i]);
-    for (i = 0; i < LENGTH(tags); i++) {
-      w = TEXTW(tags[i]);
-      drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? (m == selmon ? SchemeWithATagSel : SchemeSel) : occ & 1 << i ? SchemeWithATag : SchemeNorm]);
-      drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], 0); // bh+1 to compensate SchemeOneWindow
-      x += w;
-    }
+  for (i = 0; i < LENGTH(tags); i++) {
+    w = TEXTW(m->tagGlyphs[i]);
+    drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? (m == selmon ? SchemeWithATagSel : SchemeSel) : occ & 1 << i ? SchemeWithATag : SchemeNorm]);
+    drw_text(drw, x, 0, w, bh, lrpad / 2, m->tagGlyphs[i], 0); // bh+1 to compensate SchemeOneWindow
+    x += w;
   }
+
 	w = TEXTW(m->ltsymbol);
 	drw_setscheme(drw, scheme[SchemeNorm]);
 	x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
@@ -1091,9 +1126,11 @@ manage(Window w, XWindowAttributes *wa)
 	c->h = c->oldh = wa->height;
 	c->oldbw = wa->border_width;
 	c->cfact = 1.0;
+  c->hasglyph = false;
 
 	updatetitle(c);
 	if (XGetTransientForHint(dpy, w, &trans) && (t = wintoclient(trans))) {
+    fprintf(stderr, "skipping rules for %s\n", c->name);
 		c->mon = t->mon;
 		c->tags = t->tags;
 	} else {
